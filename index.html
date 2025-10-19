@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy Diwali 🎆</title>
+<style>
+  :root{
+    --bg:#0b0b1a;
+    --card:#111121;
+    --accent:#ffcc33;
+    --glow: 0 0 30px rgba(255,204,51,0.18);
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#fff;background:linear-gradient(180deg,#0b0b1a 0%, #0b0b2a 60%);}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:32px;}
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:16px;padding:28px 36px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    max-width:700px;width:100%;
+  }
+  h1{margin:0 0 6px;font-size:32px;letter-spacing:0.5px}
+  p{margin:6px 0 18px;color:#d9d9e6}
+  .link-like{
+    display:inline-block;padding:12px 20px;border-radius:10px;text-decoration:none;
+    background:linear-gradient(90deg,var(--accent), #ffb84d);
+    color:#111;font-weight:700;box-shadow:var(--glow);cursor:pointer;
+    transition:transform .12s ease;
+  }
+  .link-like:active{transform:scale(.98)}
+  .diya{margin:28px auto 0; width:140px;height:140px;position:relative;}
+  .flame{
+    position:absolute; left:50%; transform:translateX(-50%); bottom:48px;
+    width:26px;height:40px;border-radius:50% 50% 50% 50%;
+    background: radial-gradient(circle at 50% 30%, #ffd66b 0%, #ff8c00 55%, rgba(255,140,0,0) 90%);
+    filter:drop-shadow(0 0 12px rgba(255,140,0,0.6));
+    animation: flicker 900ms infinite;
+  }
+  .dpot{
+    position:absolute; left:50%; transform:translateX(-50%); bottom:0;
+    width:120px;height:60px;border-radius:60px 60px 20px 20px/40px 40px 20px 20px;
+    background:linear-gradient(180deg,#5a1b00,#a24a00); box-shadow:0 6px 18px rgba(0,0,0,0.6);
+  }
+  @keyframes flicker{
+    0%{transform:translateX(-50%) scaleY(1); opacity:1}
+    35%{transform:translateX(-50%) scaleY(.92); opacity:.9}
+    70%{transform:translateX(-50%) scaleY(1.06); opacity:1}
+    100%{transform:translateX(-50%) scaleY(1); opacity:1}
+  }
+  .confetti{
+    position:absolute; left:50%; transform:translateX(-50%); top:-10px; width:100%;
+    pointer-events:none; height:0; overflow:visible;
+  }
+  .confetti .piece{
+    position:absolute; width:8px; height:14px; opacity:0; transform-origin:center;
+    animation: drop linear forwards;
+  }
+  @keyframes drop{
+    0%{opacity:1; transform: translateY(0) rotate(0) scale(1)}
+    100%{opacity:1; transform: translateY(420px) rotate(720deg) scale(.9)}
+  }
+  .message{
+    margin-top:18px;font-size:18px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.6);
+  }
+  footer{margin-top:14px;color:#cfcfe6;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>✨ Happy Diwali! ✨</h1>
+      <p>Click the link below to play a short Diwali tune and light the diya.</p>
+
+      <a id="playLink" class="link-like" href="#">Play Happy Diwali 🎶</a>
+
+      <div class="diya" id="diyaContainer" aria-hidden="true" style="display:none;">
+        <div class="confetti" id="confetti"></div>
+        <div class="flame" id="flame"></div>
+        <div class="dpot"></div>
+      </div>
+
+      <div class="message" id="wishText"></div>
+      <footer>Share this file or open it on your phone to play the tune.</footer>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const link = document.getElementById('playLink');
+  const diya = document.getElementById('diyaContainer');
+  const wish = document.getElementById('wishText');
+  const confettiContainer = document.getElementById('confetti');
+
+  // Create confetti pieces dynamically when played
+  function makeConfetti() {
+    confettiContainer.innerHTML = '';
+    const colors = ['#ff3b3b','#ffd700','#32cd32','#1e90ff','#ff7bac','#ff8c00'];
+    for(let i=0;i<26;i++){
+      const el = document.createElement('div');
+      el.className = 'piece';
+      el.style.background = colors[i%colors.length];
+      el.style.left = (Math.random()*100)+'%';
+      el.style.top = (Math.random()*-40)+'px';
+      el.style.width = (6 + Math.random()*10)+'px';
+      el.style.height = (8 + Math.random()*14)+'px';
+      el.style.borderRadius = `${Math.random()*50}%`;
+      el.style.animationDuration = (1.2 + Math.random()*1.6) + 's';
+      el.style.animationDelay = (Math.random()*0.3)+'s';
+      confettiContainer.appendChild(el);
+    }
+  }
+
+  // WebAudio melody (simple celebratory tune)
+  async function playMelody(){
+    // Create audio context
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // small helper to play a frequency for duration (ms)
+    function note(freq, ms, type='sine', gain=0.15){
+      return new Promise(res => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = type;
+        o.frequency.value = freq;
+        g.gain.value = 0;
+        o.connect(g);
+        g.connect(ctx.destination);
+        const t = ctx.currentTime;
+        // quick attack, gentle release
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(gain, t + 0.01);
+        o.start(t);
+        g.gain.linearRampToValueAtTime(0.0001, t + ms/1000);
+        o.stop(t + ms/1000 + 0.02);
+        setTimeout(res, ms + 10);
+      });
+    }
+
+    // simple scale: frequencies (approx melody)
+    // A short festive phrase (not copyrighted) — sequence of freq (Hz) and durations
+    const melody = [
+      [523.25,260], [587.33,240], [659.25,340], // C5 D5 E5
+      [523.25,240], [659.25,240], [784.00,400], // C5 E5 G5
+      [659.25,220], [587.33,220], [523.25,420], // E5 D5 C5
+      [392.00,420] // G4 final
+    ];
+    // play with slight timbre changes
+    for (let i=0;i<melody.length;i++){
+      const [f,d] = melody[i];
+      const type = (i%3===0)?'triangle':(i%3===1)?'sine':'square';
+      await note(f,d,type,0.13 + Math.random()*0.06);
+    }
+
+    // small flourish with oscillator sweep
+    await new Promise(res => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type='sawtooth';
+      o.frequency.value = 400;
+      g.gain.value = 0.08;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      o.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.9);
+      setTimeout(()=>{ o.stop(); res(); }, 900);
+    });
+
+    // close context after short time (good practice)
+    setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 1500);
+  }
+
+  // Main click handler
+  link.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    // show diya + message
+    diya.style.display = 'block';
+    wish.textContent = '✨ Wishing you a bright and joyful Diwali! ✨';
+    // create confetti pieces
+    makeConfetti();
+
+    // small animation: spawn confetti pieces by adding slight left offsets
+    const pieces = confettiContainer.querySelectorAll('.piece');
+    pieces.forEach((p, i) => {
+      p.style.left = (Math.random()*100)+'%';
+    });
+
+    // play the melody (if browser allows). If user gesture required, this click satisfies it.
+    try{
+      await playMelody();
+    }catch(err){
+      // if audio fails (autoplay policy) just ignore
+      console.warn('Audio play error:', err);
+    }
+  });
+
+  // Optional: also allow keyboard Enter/Space to trigger
+  link.addEventListener('keydown', (e)=> {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault(); link.click();
+    }
+  });
+})();
+</script>
+</body>
+</html>
